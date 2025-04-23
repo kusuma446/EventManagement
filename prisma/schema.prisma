@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  first_name     String
+  last_name      String
+  email          String         @unique
+  password       String
+  profile_pict   String?
+  referral_code  String         @unique
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  role           Role
+  point          Int            @default(0)
+  coupons        Coupon[]
+  events         Event[]        @relation("OrganizerEvents")
+  point_history  PointHistory[]
+  referred_by    Referral[]     @relation("Referred")
+  referred_users Referral[]     @relation("Referrer")
+  reviews        Review[]
+  transactions   Transaction[]
+}
+
+model Event {
+  id              String        @id @default(cuid())
+  organizer_id    String
+  name            String
+  description     String
+  category        String
+  location        String
+  start_date      DateTime
+  end_date        DateTime
+  available_seats Int
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  Pay             Boolean
+  organizer       User          @relation("OrganizerEvents", fields: [organizer_id], references: [id])
+  reviews         Review[]
+  ticket_types    TicketType[]
+  vouchers        Voucher[]
+}
+
+model TicketType {
+  id           String        @id @default(cuid())
+  event_id     String
+  name         String
+  price        Int
+  quota        Int
+  event        Event         @relation(fields: [event_id], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id             String            @id @default(cuid())
+  user_id        String
+  ticket_type_id String?
+  total_price    Int
+  used_points    Int               @default(0)
+  voucher_id     String?
+  coupon_id      String?
+  created_at     DateTime          @default(now())
+  status         TransactionStatus
+  coupon         Coupon?           @relation(fields: [coupon_id], references: [id])
+  ticket_type    TicketType?       @relation(fields: [ticket_type_id], references: [id])
+  user           User              @relation(fields: [user_id], references: [id])
+  voucher        Voucher?          @relation(fields: [voucher_id], references: [id])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  user_id    String
+  event_id   String
+  rating     Int
+  comment    String
+  created_at DateTime @default(now())
+  event      Event    @relation(fields: [event_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model Voucher {
+  id           String        @id @default(cuid())
+  event_id     String
+  code         String
+  discount     Int
+  start_date   DateTime
+  end_date     DateTime
+  transactions Transaction[]
+  event        Event         @relation(fields: [event_id], references: [id])
+}
+
+model Coupon {
+  id           String        @id @default(cuid())
+  user_id      String
+  code         String
+  discount     Int
+  used         Boolean       @default(false)
+  end_date     DateTime
+  start_date   DateTime
+  user         User          @relation(fields: [user_id], references: [id])
+  transactions Transaction[]
+}
+
+model PointHistory {
+  id         String    @id @default(cuid())
+  user_id    String
+  amount     Int
+  expires_at DateTime?
+  created_at DateTime  @default(now())
+  user       User      @relation(fields: [user_id], references: [id])
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrer_Id String
+  referred_Id String
+  createdAt   DateTime @default(now())
+  referred    User     @relation("Referred", fields: [referred_Id], references: [id])
+  referrer    User     @relation("Referrer", fields: [referrer_Id], references: [id])
+
+  @@unique([referrer_Id, referred_Id])
+}
+
+enum Role {
+  CUSTOMER
+  ORGANIZER
+}
+
+enum TransactionStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELED
+}
