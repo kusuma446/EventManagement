@@ -1,36 +1,72 @@
 import prisma from "../lib/prisma";
+import { Request } from "express";
 
-export const createEvent = (data: any) => {
-  return prisma.event.create({ data });
+export const createEventService = async (req: Request) => {
+  const user = req.user!;
+  const {
+    name,
+    description,
+    category,
+    location,
+    Pay,
+    start_date,
+    end_date,
+    available_seats,
+  } = req.body;
+
+  // Cek hanya ORGANIZER yang boleh buat event
+  if (user.role !== "ORGANIZER") {
+    throw { status: 403, message: "Only organizer can create event" };
+  }
+
+  const newEvent = await prisma.event.create({
+    data: {
+      name,
+      description,
+      category,
+      location,
+      Pay,
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+      available_seats,
+      organizer_id: user.id, // Relasi ke events pada user
+    },
+  });
+
+  return newEvent;
 };
 
-export const getAllEvents = (category?: string) => {
+export const getAllEventsService = async (req: Request) => {
+  const { category } = req.query;
   return prisma.event.findMany({
     where: category
-      ? { category: { equals: category, mode: "insensitive" } }
+      ? { category: { equals: String(category), mode: "insensitive" } }
       : undefined,
     include: {
-      ticket_types: true,
-      reviews: true,
+      ticket_types: true, // Melihat jenis tiket dari event
+      reviews: true, // Melihat review terhadap event
     },
   });
 };
 
-export const getEventDetail = (id: string) => {
-  return prisma.event.findUnique({
+export const getEventDetailService = async (id: string) => {
+  const event = await prisma.event.findUnique({
     where: { id },
     include: {
-      ticket_types: true,
+      ticket_types: true, // Melihat semua jenis tiket
       reviews: {
+        // Melihat review
         include: {
-          user: {
-            select: { first_name: true, last_name: true },
-          },
+          user: { select: { first_name: true, last_name: true } }, // Termasuk nama reviewer
         },
       },
       organizer: {
-        select: { first_name: true, last_name: true, email: true },
+        // Informasi penyelenggara event
+        select: { first_name: true, last_name: true },
       },
     },
   });
+
+  if (!event) throw { status: 404, message: "Event not found" };
+  return event;
 };

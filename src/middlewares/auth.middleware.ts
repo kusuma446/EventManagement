@@ -1,37 +1,29 @@
-import { Role } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
+import { AuthPayload } from "../types/express";
 
 const secret_token: string = JWT_SECRET ?? "devsecret";
-
-interface AuthPayLoad {
-  id: string;
-  role: Role;
-}
 
 export const isAuthenticated = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || authHeader.startsWith("Bearer ")) {
-    res
-      .status(401)
-      .json({ message: "Unauthorized - missing or invalid token" });
-    return;
-  }
-
-  const token = authHeader.split(" ")[1];
-
   try {
-    const payload = jwt.verify(token, secret_token) as AuthPayLoad;
-    req.user = payload;
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) throw new Error("Unauthorized");
+
+    const payload = jwt.verify(token, String(secret_token));
+
+    if (!payload) throw new Error("Invalid token");
+
+    req.user = payload as AuthPayload;
+
     next();
   } catch (error) {
-    res.status(401).json({ message: "Unauthorized - invalid token" });
+    next(error);
   }
 };
 

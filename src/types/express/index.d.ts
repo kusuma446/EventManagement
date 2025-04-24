@@ -1,16 +1,15 @@
 import { Role } from "@prisma/client";
 import { File } from "multer";
 
+export interface AuthPayload {
+  id: string;
+  role: Role;
+}
 declare global {
   namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: Role;
-      };
+    export interface Request {
+      user?: AuthPayload;
       file?: File;
     }
   }
 }
-
-export {};

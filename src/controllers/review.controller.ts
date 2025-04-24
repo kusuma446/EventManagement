@@ -1,47 +1,31 @@
-import { Request, Response } from "express";
-import * as reviewService from "../services/review.service";
+import { Request, Response, NextFunction } from "express";
+import {
+  createReviewService,
+  getReviewsByEventService,
+} from "../services/review.service";
 
 export const createReview = async (
   req: Request,
-  res: Response
-): Promise<void> => {
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const user = req.user!;
-    const { event_id, rating, comment } = req.body;
-
-    const canReview = await reviewService.hasUserPurchased(user?.id, event_id);
-    if (!canReview) {
-      res
-        .status(403)
-        .json({ message: "you can only review events you've attended" });
-      return;
-    }
-
-    const review = await reviewService.createReview({
-      user_id: user.id,
-      event_id,
-      rating,
-      comment,
-    });
-
-    res.status(201).json({ message: "Review submitted", review });
+    const data = await createReviewService(req);
+    res.status(201).json({ message: "Review submitted", data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
-export const getReviewByEvent = async (
+export const getReviewsByEvent = async (
   req: Request,
-  res: Response
-): Promise<void> => {
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { eventId } = req.params;
-    const reviews = await reviewService.getReviewsByEvent(eventId);
-
-    res.status(200).json({ reviews });
+    const data = await getReviewsByEventService(req.params.eventId);
+    res.status(200).json({ reviews: data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
