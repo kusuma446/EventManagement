@@ -5,6 +5,10 @@ import path from "path";
 
 export const createTransactionService = async (req: Request) => {
   const user = req.user!;
+  // Transaksi hanya CUSTOMER
+  if (user.role !== "CUSTOMER") {
+    throw { status: 403, message: "Only customers can make transactions" };
+  }
   const { ticket_type_id, voucher_id, coupon_id, used_points } = req.body;
 
   if (!ticket_type_id)
@@ -17,6 +21,20 @@ export const createTransactionService = async (req: Request) => {
   // Cek ketersediaan tiket
   if (!ticket || ticket.quota <= 0)
     throw { status: 400, message: "Ticket not available" };
+
+  // Mengecek apakah request body menyertakan voucher_id
+  if (voucher_id) {
+    // Mencari voucher di database berdasarkan ID
+    const voucher = await prisma.voucher.findUnique({
+      where: { id: voucher_id },
+    });
+    if (!voucher) throw { status: 404, message: "Voucher not found" };
+
+    const now = new Date();
+    if (voucher.start_date > now || voucher.end_date < now) {
+      throw { status: 400, message: "Voucher is not valid at this time" };
+    }
+  }
 
   // Cek apakah user sudah pernah beli tiket ini
   const existing = await prisma.transaction.findFirst({
