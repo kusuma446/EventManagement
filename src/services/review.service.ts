@@ -3,6 +3,12 @@ import { Request } from "express";
 
 export const createReviewService = async (req: Request) => {
   const user = req.user!;
+
+  // Hanya customer yang bisa buat review
+  if (user.role !== "CUSTOMER") {
+    throw { status: 403, message: "Only customers can submit reviews" };
+  }
+
   const { event_id, rating, comment } = req.body;
 
   // Ambil semua ticketType.id yang terkait dengan event tersebut

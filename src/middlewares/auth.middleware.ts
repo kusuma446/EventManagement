@@ -40,10 +40,7 @@ export const isOrganizer = (
 };
 
 export const isCustomer = (req: Request, res: Response, next: NextFunction) => {
-  if (
-    !req.user ||
-    (req.user.role !== "CUSTOMER" && req.user.role !== "ORGANIZER")
-  ) {
+  if (!req.user || req.user.role !== "CUSTOMER") {
     res.status(403).json({ message: "Forbidden - customer access only" });
   }
   next();
