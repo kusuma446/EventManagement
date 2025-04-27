@@ -2,6 +2,7 @@ import prisma from "../lib/prisma";
 import { TransactionStatus } from "@prisma/client";
 import { Request } from "express";
 import path from "path";
+import { sendEmail } from "../utils/nodemailer";
 
 export const createTransactionService = async (req: Request) => {
   const user = req.user!;
@@ -97,7 +98,10 @@ export const approveTransactionService = async (req: Request) => {
   const trx = await prisma.transaction.findUnique({
     // Ambil relasi ke tickey_type, dan dari situ juga ambil relasi ke event
     where: { id },
-    include: { ticket_type: { include: { event: true } } },
+    include: {
+      ticket_type: { include: { event: true } },
+      user: true,
+    },
   });
   if (!trx) throw { status: 404, message: "Transaction not found" };
   // Cek apakah user yang login adalah organizer dari event itu
@@ -105,10 +109,23 @@ export const approveTransactionService = async (req: Request) => {
     throw { status: 403, message: "You are not the organizer of this event" };
   }
 
-  return prisma.transaction.update({
+  const updated = await prisma.transaction.update({
     where: { id },
     data: { status: TransactionStatus.DONE },
   });
+
+  // Kirim email notifikasi ke customer
+  if (trx.user && trx.user.email) {
+    await sendEmail(
+      trx.user.email,
+      "Your Transaction Has Been Approved!",
+      `<p>Hi ${trx.user.first_name},</p>
+       <p>Your transaction for event ticket has been <strong>approved</strong> successfully.</p>
+       <p>Thank you for using our platform!</p>`
+    );
+  }
+
+  return updated;
 };
 
 export const rejectTransactionService = async (req: Request) => {
@@ -117,7 +134,10 @@ export const rejectTransactionService = async (req: Request) => {
 
   const trx = await prisma.transaction.findUnique({
     where: { id },
-    include: { ticket_type: { include: { event: true } } },
+    include: {
+      ticket_type: { include: { event: true } },
+      user: true,
+    },
   });
   if (!trx) throw { status: 404, message: "Transaction not found" };
 
@@ -150,21 +170,38 @@ export const rejectTransactionService = async (req: Request) => {
   }
 
   // Update status transaksi
-  return prisma.transaction.update({
+  const updated = await prisma.transaction.update({
     where: { id },
     data: { status: TransactionStatus.REJECTED },
   });
+
+  // Kirim email notifikasi ke customer
+  if (trx.user && trx.user.email) {
+    await sendEmail(
+      trx.user.email,
+      "Your Transaction Has Been Rejected",
+      `<p>Hi ${trx.user.first_name},</p>
+       <p>Unfortunately, your transaction for event ticket has been <strong>rejected</strong> by the event organizer.</p>
+       <p>Please check the event or try again later.</p>`
+    );
+  }
+
+  return updated;
 };
 
 export const autoCancelExpiredTransactionsService = async () => {
   const now = new Date();
+
+  // Ambil semua transaksi expired + ambil user
   const expired = await prisma.transaction.findMany({
     where: {
       status: TransactionStatus.WAITING_PAYMENT,
       created_at: { lt: new Date(now.getTime() - 2 * 60 * 60 * 1000) },
     },
+    include: { user: true }, // Ambil relasi user
   });
 
+  // Ubah status transaksi menjadi EXPIRED
   for (const trx of expired) {
     await prisma.transaction.update({
       where: { id: trx.id },
@@ -190,6 +227,17 @@ export const autoCancelExpiredTransactionsService = async () => {
         where: { id: trx.user_id },
         data: { point: { increment: trx.used_points } },
       });
+    }
+
+    // Kirim notifikasi email ke user
+    if (trx.user && trx.user.email) {
+      await sendEmail(
+        trx.user.email,
+        "Your Transaction Has Been Auto-Canceled",
+        `<p>Hi ${trx.user.first_name},</p>
+         <p>Unfortunately, your transaction was <strong>auto-canceled</strong> because the payment time limit has expired.</p>
+         <p>Please create a new transaction if you still want to attend the event.</p>`
+      );
     }
   }
 
