@@ -2,8 +2,9 @@ import prisma from "../lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
-import { Role } from "@prisma/client";
+import { Request } from "express";
 import { AuthRequestBody, LoginRequestBody } from "../interface/interface";
+import { sendEmail } from "../utils/nodemailer";
 
 const secret_token: string = JWT_SECRET ?? "devsecret";
 
@@ -97,4 +98,89 @@ export const loginService = async (body: LoginRequestBody) => {
     expiresIn: "1d",
   });
   return { user, token };
+};
+
+export const updateProfileService = async (req: Request) => {
+  const user = req.user!;
+  const { first_name, last_name } = req.body;
+
+  // Ambil file upload jika ada (profile picture)
+  const file = req.file;
+  // Jika file ada, set path foto profile ke /avatar/namafile, kalau tidak undefined
+  const profile_pict = file ? `/avatar/${file.filename}` : undefined;
+
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      first_name,
+      last_name,
+      ...(profile_pict && { profile_pict }),
+    },
+  });
+
+  return updated;
+};
+
+export const changePasswordService = async (req: Request) => {
+  const user = req.user!;
+  const { old_password, new_password } = req.body;
+
+  const existingUser = await prisma.user.findUnique({ where: { id: user.id } });
+  if (!existingUser) throw { status: 404, message: "User not found" };
+
+  // Cek apakah password lama yang dikirim cocok dengan password di database
+  const match = await bcrypt.compare(old_password, existingUser.password);
+  if (!match) throw { status: 400, message: "Old password is incorrect" };
+
+  // Hash (enkripsi) password baru
+  const hashed = bcrypt.hashSync(new_password, 10);
+  // Update password baru
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed },
+  });
+
+  return { id: updated.id, email: updated.email };
+};
+
+export const forgotPasswordService = async (req: Request) => {
+  const { email } = req.body;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw { status: 404, message: "User not found" };
+
+  // Generate JWT token untuk reset password (berlaku 15 menit)
+  const token = jwt.sign({ id: user.id }, secret_token, { expiresIn: "15min" });
+
+  // Buat link reset password yang berisi token
+  const resetLink = `http://localhost:5050/reset-password/${token}`;
+
+  await sendEmail(
+    email,
+    "Reset Your Password",
+    `<p>Click the following link to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`
+  );
+
+  return { email, resetLink };
+};
+
+export const resetPasswordService = async (req: Request) => {
+  const { token, new_password } = req.body;
+
+  try {
+    // Verifikasi token yang dikirim user
+    const payload = jwt.verify(token, secret_token) as { id: string };
+    // Hash (enkripsi) password baru sebelum disimpan
+    const hashed = bcrypt.hashSync(new_password, 10);
+
+    // Update password user di database berdasarkan id dari token
+    const updated = await prisma.user.update({
+      where: { id: payload.id },
+      data: { password: hashed },
+    });
+
+    return { id: updated.id, email: updated.email };
+  } catch (error) {
+    throw { status: 400, message: "Invalid or expired token" };
+  }
 };
