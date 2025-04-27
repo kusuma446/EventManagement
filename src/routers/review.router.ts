@@ -1,13 +1,21 @@
 import express from "express";
-import { isAuthenticated } from "../middlewares/auth.middleware";
+import { isAuthenticated, isCustomer } from "../middlewares/auth.middleware";
 import {
   createReview,
   getReviewsByEvent,
 } from "../controllers/review.controller";
+import ReqValidator from "../middlewares/validator.middleware";
+import { createReviewSchema } from "../schemas/review.schema";
 
 const router = express.Router();
 
-router.post("/", isAuthenticated, createReview);
+router.post(
+  "/",
+  isAuthenticated,
+  isCustomer,
+  ReqValidator(createReviewSchema),
+  createReview
+);
 router.get("/event/:eventId", getReviewsByEvent);
 
 export default router;

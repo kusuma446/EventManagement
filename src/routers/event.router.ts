@@ -1,15 +1,24 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.middleware";
+import { isOrganizer } from "../middlewares/auth.middleware";
 import {
   createEvent,
-  listEvents,
+  getAllEvents,
   getEventDetail,
 } from "../controllers/event.controller";
+import ReqValidator from "../middlewares/validator.middleware";
+import { createEventSchema } from "../schemas/event.schema";
 
 const router = express.Router();
 
-router.get("/", listEvents);
+router.get("/", getAllEvents);
 router.get("/:id", getEventDetail);
-router.post("/", isAuthenticated, createEvent);
+router.post(
+  "/",
+  isAuthenticated,
+  isOrganizer,
+  ReqValidator(createEventSchema),
+  createEvent
+);
 
 export default router;

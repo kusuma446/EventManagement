@@ -1,5 +1,9 @@
 import express from "express";
-import { isAuthenticated } from "../middlewares/auth.middleware";
+import {
+  isAuthenticated,
+  isCustomer,
+  isOrganizer,
+} from "../middlewares/auth.middleware";
 import {
   createTransaction,
   uploadPaymentProof,
@@ -7,18 +11,27 @@ import {
   rejectTransaction,
 } from "../controllers/transaction.controller";
 import multer from "multer";
+import ReqValidator from "../middlewares/validator.middleware";
+import { createTransactionSchema } from "../schemas/transaction.schema";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-router.post("/", isAuthenticated, createTransaction);
+router.post(
+  "/",
+  isAuthenticated,
+  isCustomer,
+  ReqValidator(createTransactionSchema),
+  createTransaction
+);
 router.put(
   "/:id/upload-proof",
   isAuthenticated,
   upload.single("file"),
+  isCustomer,
   uploadPaymentProof
 );
-router.put("/:id/approve", isAuthenticated, approveTransaction);
-router.put("/:id/reject", isAuthenticated, rejectTransaction);
+router.put("/:id/approve", isAuthenticated, isOrganizer, approveTransaction);
+router.put("/:id/reject", isAuthenticated, isOrganizer, rejectTransaction);
 
 export default router;
