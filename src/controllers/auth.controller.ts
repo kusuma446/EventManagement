@@ -25,6 +25,7 @@ export const login = async (
 ) => {
   try {
     const data = await loginService(req.body);
+    res.status(201).json({ message: "Login success", data });
   } catch (error) {
     next(error);
   }
