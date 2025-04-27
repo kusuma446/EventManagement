@@ -11,9 +11,17 @@ import reviewRoutes from "./routers/review.router";
 import dashboardRoutes from "./routers/dashboard.router";
 import voucherRoutes from "./routers/voucher.router";
 
+import { scheduleAutoExpireTransactions } from "./utils/cron/autoExpireTransactions";
+import { scheduleAutoCancelUnconfirmedTransactions } from "./utils/cron/autoCancelUnconfirmedTransactions";
+import { scheduleCleanupExpiredPointsAndCoupons } from "./utils/cron/cleanupExpiredPointsAndCoupons";
+
 const port = PORT || 5050;
 const app: Application = express();
 dotenv.config();
+
+scheduleAutoExpireTransactions();
+scheduleAutoCancelUnconfirmedTransactions();
+scheduleCleanupExpiredPointsAndCoupons;
 
 app.use(cors());
 app.use(express.json());
