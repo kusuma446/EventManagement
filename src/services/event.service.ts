@@ -19,6 +19,11 @@ export const createEventService = async (req: Request) => {
     throw { status: 403, message: "Only organizer can create event" };
   }
 
+  // Validasi pastikan tanggal start sebelum tanggal end
+  if (new Date(start_date) >= new Date(end_date)) {
+    throw { status: 400, message: "Start date must be before end date" };
+  }
+
   const newEvent = await prisma.event.create({
     data: {
       name,

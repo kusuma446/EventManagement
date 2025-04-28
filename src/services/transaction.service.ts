@@ -23,6 +23,7 @@ export const createTransactionService = async (req: Request) => {
   if (!ticket || ticket.quota <= 0)
     throw { status: 400, message: "Ticket not available" };
 
+  let voucherDiscount = 0;
   // Mengecek apakah request body menyertakan voucher_id
   if (voucher_id) {
     // Mencari voucher di database berdasarkan ID
@@ -35,7 +36,20 @@ export const createTransactionService = async (req: Request) => {
     if (voucher.start_date > now || voucher.end_date < now) {
       throw { status: 400, message: "Voucher is not valid at this time" };
     }
+
+    voucherDiscount = voucher.discount;
   }
+
+  let couponDiscount = 0;
+  // Validasi coupon jika ada
+  if (coupon_id) {
+    const coupon = await prisma.coupon.findUnique({ where: { id: coupon_id } });
+    if (!coupon || coupon.used)
+      throw { status: 404, message: "Coupon not found or already used" };
+    couponDiscount = coupon.discount;
+  }
+
+  const pointsUsed = used_points || 0;
 
   // Cek apakah user sudah pernah beli tiket ini
   const existing = await prisma.transaction.findFirst({
@@ -44,7 +58,10 @@ export const createTransactionService = async (req: Request) => {
   if (existing)
     throw { status: 400, message: "You already purchased this ticket" };
 
-  const total_price = (ticket.price = used_points || 0);
+  // Hitung total price
+  let total_price =
+    ticket.price - voucherDiscount - couponDiscount - pointsUsed;
+  if (total_price < 0) total_price = 0; // Tidak boleh minus
 
   // Buat transaksi
   const transaction = await prisma.transaction.create({
@@ -53,7 +70,7 @@ export const createTransactionService = async (req: Request) => {
       ticket_type_id,
       total_price,
       status: TransactionStatus.WAITING_PAYMENT,
-      used_points: used_points || 0,
+      used_points: pointsUsed,
       voucher_id,
       coupon_id,
     },
