@@ -3,6 +3,7 @@ export interface AuthRequestBody {
   last_name: string;
   email: string;
   password: string;
+  role: "CUSTOMER" | "ORGANIZER";
   referral_code?: string;
 }
 

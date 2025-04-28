@@ -9,7 +9,7 @@ import { sendEmail } from "../utils/nodemailer";
 const secret_token: string = JWT_SECRET ?? "devsecret";
 
 export const registerService = async (body: AuthRequestBody) => {
-  const { first_name, last_name, email, password, referral_code } = body;
+  const { first_name, last_name, email, password, role, referral_code } = body;
 
   // Cek email duplikat
   const emailExist = await prisma.user.findUnique({ where: { email } });
@@ -34,13 +34,18 @@ export const registerService = async (body: AuthRequestBody) => {
     referredId = referrer.id;
   }
 
+  // Validasi role
+  if (!["CUSTOMER", "ORGANIZER"].includes(role)) {
+    throw { status: 400, message: "Invalid role" };
+  }
+
   const newUser = await prisma.user.create({
     data: {
       first_name,
       last_name,
       email,
       password: hashed,
-      role: "CUSTOMER",
+      role,
       referral_code: generatedCode,
     },
   });
