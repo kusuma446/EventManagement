@@ -107,6 +107,35 @@ export const uploadPaymentProofService = async (req: Request) => {
   return { path: filePath };
 };
 
+export const getOrganizerTransactionsService = async (req: Request) => {
+  const user = req.user!;
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      ticket_type: {
+        event: {
+          organizer_id: user.id,
+        },
+      },
+    },
+    include: {
+      user: {
+        select: { first_name: true, last_name: true },
+      },
+      ticket_type: {
+        select: {
+          name: true,
+          event: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+  });
+
+  return transactions;
+};
+
 export const approveTransactionService = async (req: Request) => {
   const user = req.user!;
   const { id } = req.params;
