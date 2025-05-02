@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   createTransactionService,
   uploadPaymentProofService,
+  getOrganizerTransactionsService,
   approveTransactionService,
   rejectTransactionService,
   autoCancelExpiredTransactionsService,
@@ -30,6 +31,19 @@ export const uploadPaymentProof = async (
     res.status(200).json({ message: "Proof uploaded", data });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getOrganizerTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = await getOrganizerTransactionsService(req);
+    res.status(200).json(data);
+  } catch (err) {
+    next(err);
   }
 };
 

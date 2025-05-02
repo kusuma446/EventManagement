@@ -111,7 +111,6 @@ export const loginService = async (body: LoginRequestBody) => {
   //     isLogin: true,
   //   })
   // );
-
   // *singkron dengan redux
 
   const token = jwt.sign(

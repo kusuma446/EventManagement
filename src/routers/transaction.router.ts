@@ -7,6 +7,7 @@ import {
 import {
   createTransaction,
   uploadPaymentProof,
+  getOrganizerTransactions,
   approveTransaction,
   rejectTransaction,
 } from "../controllers/transaction.controller";
@@ -31,6 +32,14 @@ router.put(
   isCustomer,
   uploadPaymentProof
 );
+
+router.get(
+  "/organizer",
+  isAuthenticated,
+  isOrganizer,
+  getOrganizerTransactions
+);
+
 router.put("/:id/approve", isAuthenticated, isOrganizer, approveTransaction);
 router.put("/:id/reject", isAuthenticated, isOrganizer, rejectTransaction);
 
