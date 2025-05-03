@@ -99,9 +99,19 @@ export const loginService = async (body: LoginRequestBody) => {
     throw { status: 401, message: "Invalid credential" };
   }
 
-  const token = jwt.sign({ id: user.id, role: user.role }, secret_token, {
-    expiresIn: "1d",
-  });
+  const token = jwt.sign(
+    {
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      profile_pict: user.profile_pict,
+    },
+    secret_token,
+    {
+      expiresIn: "1d",
+    }
+  );
   return { user, token };
 };
 
