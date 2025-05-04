@@ -115,6 +115,7 @@ export const loginService = async (body: LoginRequestBody) => {
 
   const token = jwt.sign(
     {
+      id: user.id,
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,

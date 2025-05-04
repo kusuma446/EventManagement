@@ -45,6 +45,7 @@ export const getEventDetail = async (
   }
 };
 
+// get event untuk ORGANIZER
 export const getMyEvents = async (
   req: Request,
   res: Response,
