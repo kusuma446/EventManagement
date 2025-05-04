@@ -5,6 +5,7 @@ import {
   createEvent,
   getAllEvents,
   getEventDetail,
+  getMyEvents,
 } from "../controllers/event.controller";
 import ReqValidator from "../middlewares/validator.middleware";
 import { createEventSchema } from "../schemas/event.schema";
@@ -20,5 +21,6 @@ router.post(
   ReqValidator(createEventSchema),
   createEvent
 );
+router.get("/me", isAuthenticated, isOrganizer, getMyEvents);
 
 export default router;

@@ -75,3 +75,24 @@ export const getEventDetailService = async (id: string) => {
   if (!event) throw { status: 404, message: "Event not found" };
   return event;
 };
+
+export const getMyEventsService = async (organizerId: string) => {
+  const events = await prisma.event.findMany({
+    where: {
+      organizer_id: organizerId,
+    },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      location: true,
+      start_date: true,
+      end_date: true,
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+
+  return events;
+};
