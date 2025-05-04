@@ -96,3 +96,30 @@ export const getMyEventsService = async (organizerId: string) => {
 
   return events;
 };
+
+export const findEventsByTitle = async (query: string) => {
+  const keywords = query
+    .split(" ")
+    .map((word) => word.trim())
+    .filter((word) => word.length > 0);
+
+  return prisma.event.findMany({
+    where: {
+      OR: keywords.flatMap((word) => [
+        {
+          name: {
+            contains: word,
+            mode: "insensitive",
+          },
+        },
+        {
+          category: {
+            contains: word,
+            mode: "insensitive",
+          },
+        },
+      ]),
+    },
+    take: 10,
+  });
+};
