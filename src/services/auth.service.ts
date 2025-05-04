@@ -99,6 +99,20 @@ export const loginService = async (body: LoginRequestBody) => {
     throw { status: 401, message: "Invalid credential" };
   }
 
+  // // dispatch(
+  //   onLogin({
+  //     user: {
+  //       email: data.data.user.email,
+  //       first_name: data.data.user.first_name,
+  //       last_name: data.data.user.last_name,
+  //       role: data.data.user.role,
+  //       avatar: data.data.user.avatar, // jika tersedia
+  //     },
+  //     isLogin: true,
+  //   })
+  // );
+  // *singkron dengan redux
+
   const token = jwt.sign(
     {
       email: user.email,
