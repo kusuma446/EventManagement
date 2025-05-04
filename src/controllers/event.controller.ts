@@ -57,3 +57,17 @@ export const getMyEvents = async (
     next(error);
   }
 };
+
+import * as eventService from "../services/event.service";
+
+export const searchEvents = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string;
+
+    const events = await eventService.findEventsByTitle(query);
+    res.json(events);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
