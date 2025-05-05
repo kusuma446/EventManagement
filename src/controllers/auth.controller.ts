@@ -4,6 +4,7 @@ import { updateProfileService } from "../services/auth.service";
 import { changePasswordService } from "../services/auth.service";
 import { forgotPasswordService } from "../services/auth.service";
 import { resetPasswordService } from "../services/auth.service";
+import { getAuthenticatedUserService } from "../services/auth.service";
 
 export const register = async (
   req: Request,
@@ -78,6 +79,19 @@ export const resetPassword = async (
   try {
     const data = await resetPasswordService(req);
     res.status(200).json({ message: "Password reset successfully", data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAuthenticatedUserController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = await getAuthenticatedUserService(req);
+    res.status(200).json({ message: "Authenticated user retrieved", data });
   } catch (err) {
     next(err);
   }

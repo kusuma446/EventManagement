@@ -54,8 +54,8 @@ export const getMyEvents = async (
   next: NextFunction
 ) => {
   try {
-    const events = await getMyEventsService(req.user!.id);
-    res.json(events);
+    const data = await getMyEventsService(req);
+    res.status(200).json({ message: "My events retrieved successfully", data });
   } catch (error) {
     next(error);
   }
@@ -81,17 +81,8 @@ export const updateEvent = async (
   next: NextFunction
 ) => {
   try {
-    const { id } = req.params;
-    const { event_name, date, location } = req.body;
-    const user_id = res.locals.user.id;
-
-    const event = await updateEventService(id, user_id, {
-      event_name,
-      date,
-      location,
-    });
-
-    res.status(200).json({ message: "Event updated successfully", event });
+    const data = await updateEventService(req);
+    res.status(200).json({ message: "Event updated successfully", data });
   } catch (error) {
     next(error);
   }

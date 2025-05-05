@@ -76,7 +76,13 @@ export const getEventDetailService = async (id: string) => {
   return event;
 };
 
-export const getMyEventsService = async (organizerId: string) => {
+export const getMyEventsService = async (req: Request) => {
+  const organizerId = req.user?.id;
+
+  if (!organizerId) {
+    throw { status: 401, message: "Unauthorized" };
+  }
+
   const events = await prisma.event.findMany({
     where: {
       organizer_id: organizerId,
@@ -125,15 +131,19 @@ export const findEventsByTitle = async (query: string) => {
   });
 };
 
-export const updateEventService = async (
-  eventId: string,
-  organizerId: string,
-  data: { event_name: string; date: string; location: string }
-) => {
+export const updateEventService = async (req: Request) => {
+  const { id } = req.params;
+  const { name, start_date, end_date, location } = req.body;
+  const user_id = req.user?.id;
+
+  if (!user_id) {
+    throw { status: 401, message: "Unauthorized" };
+  }
+
   const event = await prisma.event.findFirst({
     where: {
-      id: eventId,
-      organizer_id: organizerId,
+      id,
+      organizer_id: user_id,
     },
   });
 
@@ -142,8 +152,13 @@ export const updateEventService = async (
   }
 
   const updated = await prisma.event.update({
-    where: { id: eventId },
-    data,
+    where: { id },
+    data: {
+      name,
+      start_date,
+      end_date,
+      location,
+    },
   });
 
   return updated;

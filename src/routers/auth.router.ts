@@ -4,6 +4,7 @@ import {
   login,
   changePassword,
   forgotPassword,
+  getAuthenticatedUserController,
 } from "../controllers/auth.controller";
 import { isAuthenticated } from "../middlewares/auth.middleware";
 import ReqValidator from "../middlewares/validator.middleware";
@@ -21,6 +22,7 @@ const upload = Multer("diskStorage", "avatar-", "avatar");
 
 router.post("/register", ReqValidator(registerSchema), register);
 router.post("/login", ReqValidator(loginSchema), login);
+router.get("/me", isAuthenticated, getAuthenticatedUserController);
 router.patch(
   "/profile",
   isAuthenticated,
@@ -46,10 +48,5 @@ router.post(
   ReqValidator(resetPasswordSchema),
   resetPassword
 );
-
-// Contoh route yang diproteksi
-router.get("/me", isAuthenticated, (req, res) => {
-  res.json({ message: "Authenticated", user: req.user });
-});
 
 export default router;

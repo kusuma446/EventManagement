@@ -214,3 +214,29 @@ export const resetPasswordService = async (req: Request) => {
     throw { status: 400, message: "Invalid or expired token" };
   }
 };
+
+export const getAuthenticatedUserService = async (req: Request) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw { status: 401, message: "Unauthorized" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      first_name: true,
+      last_name: true,
+      email: true,
+      profile_pict: true,
+      referral_code: true,
+      point: true,
+    },
+  });
+
+  if (!user) {
+    throw { status: 404, message: "User not found" };
+  }
+
+  return user;
+};
