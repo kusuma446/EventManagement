@@ -7,13 +7,15 @@ import {
   getEventDetail,
   getMyEvents,
   searchEvents,
+  updateEvent,
 } from "../controllers/event.controller";
 import ReqValidator from "../middlewares/validator.middleware";
-import { createEventSchema } from "../schemas/event.schema";
+import { createEventSchema, updateEventSchema } from "../schemas/event.schema";
 
 const router = express.Router();
 
-router.get("/events", searchEvents);
+router.get("/", searchEvents);
+router.get("/me", isAuthenticated, isOrganizer, getMyEvents);
 router.get("/:id", getEventDetail);
 router.post(
   "/",
@@ -22,6 +24,12 @@ router.post(
   ReqValidator(createEventSchema),
   createEvent
 );
-router.get("/me", isAuthenticated, isOrganizer, getMyEvents);
+router.put(
+  "/:id",
+  isAuthenticated,
+  isOrganizer,
+  ReqValidator(updateEventSchema),
+  updateEvent
+);
 
 export default router;

@@ -12,6 +12,7 @@ export const isAuthenticated = (
 ) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
+    console.log("Token received:", token);
 
     if (!token) throw new Error("Unauthorized");
 

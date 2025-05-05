@@ -14,3 +14,14 @@ export const createEventSchema = z.object({
   }),
   available_seats: z.number().int().min(1, "At least one seat is required"),
 });
+
+export const updateEventSchema = z.object({
+  params: z.object({
+    id: z.string().min(1),
+  }),
+  body: z.object({
+    event_name: z.string().min(1),
+    date: z.string().min(1), // bisa disesuaikan dengan ISO format
+    location: z.string().min(1),
+  }),
+});

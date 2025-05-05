@@ -4,6 +4,7 @@ import {
   getAllEventsService,
   getEventDetailService,
   getMyEventsService,
+  updateEventService,
 } from "../services/event.service";
 
 export const createEvent = async (
@@ -25,6 +26,7 @@ export const getAllEvents = async (
   next: NextFunction
 ) => {
   try {
+    console.log("🔍 Organizer payload:", req.user);
     const data = await getAllEventsService(req);
     res.status(200).json({ events: data });
   } catch (error) {
@@ -70,5 +72,27 @@ export const searchEvents = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Search error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { event_name, date, location } = req.body;
+    const user_id = res.locals.user.id;
+
+    const event = await updateEventService(id, user_id, {
+      event_name,
+      date,
+      location,
+    });
+
+    res.status(200).json({ message: "Event updated successfully", event });
+  } catch (error) {
+    next(error);
   }
 };

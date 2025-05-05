@@ -94,6 +94,7 @@ export const getMyEventsService = async (organizerId: string) => {
     },
   });
 
+  console.log("📝 Events found:", events.length);
   return events;
 };
 
@@ -122,4 +123,28 @@ export const findEventsByTitle = async (query: string) => {
     },
     take: 10,
   });
+};
+
+export const updateEventService = async (
+  eventId: string,
+  organizerId: string,
+  data: { event_name: string; date: string; location: string }
+) => {
+  const event = await prisma.event.findFirst({
+    where: {
+      id: eventId,
+      organizer_id: organizerId,
+    },
+  });
+
+  if (!event) {
+    throw { status: 404, message: "Event not found" };
+  }
+
+  const updated = await prisma.event.update({
+    where: { id: eventId },
+    data,
+  });
+
+  return updated;
 };
