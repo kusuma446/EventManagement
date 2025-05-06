@@ -92,6 +92,7 @@ export const getMyEventsService = async (req: Request) => {
       name: true,
       category: true,
       location: true,
+      available_seats: true,
       start_date: true,
       end_date: true,
     },
