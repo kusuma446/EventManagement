@@ -43,11 +43,11 @@ export const scheduleAutoExpireTransactions = () => {
           });
 
           // Restore available seats jika tiket ada dan punya event
-          if (trx.ticket_type && trx.ticket_type.event) {
-            await tx.event.update({
-              where: { id: trx.ticket_type.event.id },
+          if (trx.ticket_type) {
+            await tx.ticketType.update({
+              where: { id: trx.ticket_type.id },
               data: {
-                available_seats: {
+                quota: {
                   increment: 1,
                 },
               },
