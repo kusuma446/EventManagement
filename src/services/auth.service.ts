@@ -183,7 +183,7 @@ export const forgotPasswordService = async (req: Request) => {
   const token = jwt.sign({ id: user.id }, secret_token, { expiresIn: "15min" });
 
   // Buat link reset password yang berisi token
-  const resetLink = `http://localhost:5050/reset-password/${token}`;
+  const resetLink = `http://localhost:3000/reset-password?token=${token}`;
 
   await sendEmail(
     email,
