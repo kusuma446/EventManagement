@@ -231,6 +231,14 @@ export const getAuthenticatedUserService = async (req: Request) => {
       profile_pict: true,
       referral_code: true,
       point: true,
+      coupons: {
+        select: {
+          id: true,
+          code: true,
+          discount: true,
+          end_date: true,
+        },
+      },
     },
   });
 
