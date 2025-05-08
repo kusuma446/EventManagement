@@ -1,0 +1,18 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const auth_middleware_2 = require("../middlewares/auth.middleware");
+const event_controller_1 = require("../controllers/event.controller");
+const validator_middleware_1 = __importDefault(require("../middlewares/validator.middleware"));
+const event_schema_1 = require("../schemas/event.schema");
+const router = express_1.default.Router();
+router.get("/", event_controller_1.searchEvents);
+router.get("/me", auth_middleware_1.isAuthenticated, auth_middleware_2.isOrganizer, event_controller_1.getMyEvents);
+router.get("/:id", event_controller_1.getEventDetail);
+router.post("/", auth_middleware_1.isAuthenticated, auth_middleware_2.isOrganizer, (0, validator_middleware_1.default)(event_schema_1.createEventSchema), event_controller_1.createEvent);
+router.put("/:id", auth_middleware_1.isAuthenticated, auth_middleware_2.isOrganizer, (0, validator_middleware_1.default)(event_schema_1.updateEventSchema), event_controller_1.updateEvent);
+exports.default = router;

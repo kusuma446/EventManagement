@@ -1,0 +1,40 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const config_1 = require("./config");
+const path_1 = __importDefault(require("path"));
+const auth_router_1 = __importDefault(require("./routers/auth.router"));
+const event_router_1 = __importDefault(require("./routers/event.router"));
+const ticket_router_1 = __importDefault(require("./routers/ticket.router"));
+const transaction_router_1 = __importDefault(require("./routers/transaction.router"));
+const review_router_1 = __importDefault(require("./routers/review.router"));
+const dashboard_router_1 = __importDefault(require("./routers/dashboard.router"));
+const voucher_router_1 = __importDefault(require("./routers/voucher.router"));
+const autoExpireTransactions_1 = require("./utils/cron/autoExpireTransactions");
+const autoCancelUnconfirmedTransactions_1 = require("./utils/cron/autoCancelUnconfirmedTransactions");
+const cleanupExpiredPointsAndCoupons_1 = require("./utils/cron/cleanupExpiredPointsAndCoupons");
+const port = config_1.PORT || 5050;
+const app = (0, express_1.default)();
+dotenv_1.default.config();
+(0, autoExpireTransactions_1.scheduleAutoExpireTransactions)();
+(0, autoCancelUnconfirmedTransactions_1.scheduleAutoCancelUnconfirmedTransactions)();
+cleanupExpiredPointsAndCoupons_1.scheduleCleanupExpiredPointsAndCoupons;
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use("/avatar", express_1.default.static(path_1.default.join(__dirname, "../public/avatar")));
+// Routes
+app.use("/auth", auth_router_1.default);
+app.use("/events", event_router_1.default);
+app.use("/ticket-types", ticket_router_1.default);
+app.use("/transactions", transaction_router_1.default);
+app.use("/reviews", review_router_1.default);
+app.use("/dashboard", dashboard_router_1.default);
+app.use("/vouchers", voucher_router_1.default);
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
