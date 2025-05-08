@@ -1,0 +1,27 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const auth_controller_1 = require("../controllers/auth.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const validator_middleware_1 = __importDefault(require("../middlewares/validator.middleware"));
+const auth_schema_1 = require("../schemas/auth.schema");
+const multer_1 = require("../utils/multer");
+const auth_controller_2 = require("../controllers/auth.controller");
+const auth_schema_2 = require("../schemas/auth.schema");
+const auth_schema_3 = require("../schemas/auth.schema");
+const auth_schema_4 = require("../schemas/auth.schema");
+const auth_controller_3 = require("../controllers/auth.controller");
+const auth_schema_5 = require("../schemas/auth.schema");
+const router = express_1.default.Router();
+const upload = (0, multer_1.Multer)("diskStorage", "avatar-", "avatar");
+router.post("/register", (0, validator_middleware_1.default)(auth_schema_1.registerSchema), auth_controller_1.register);
+router.post("/login", (0, validator_middleware_1.default)(auth_schema_1.loginSchema), auth_controller_1.login);
+router.get("/me", auth_middleware_1.isAuthenticated, auth_controller_1.getAuthenticatedUserController);
+router.patch("/profile", auth_middleware_1.isAuthenticated, upload.single("file"), (0, validator_middleware_1.default)(auth_schema_2.updateProfileSchema), auth_controller_2.updateProfile);
+router.patch("/password", auth_middleware_1.isAuthenticated, (0, validator_middleware_1.default)(auth_schema_3.changePasswordSchema), auth_controller_1.changePassword);
+router.post("/forgot-password", (0, validator_middleware_1.default)(auth_schema_4.forgotPasswordSchema), auth_controller_1.forgotPassword);
+router.post("/reset-password", (0, validator_middleware_1.default)(auth_schema_5.resetPasswordSchema), auth_controller_3.resetPassword);
+exports.default = router;
