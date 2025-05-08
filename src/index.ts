@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { PORT } from "./config";
+import path from "path";
 
 import authRoutes from "./routers/auth.router";
 import eventRoutes from "./routers/event.router";
@@ -25,6 +26,7 @@ scheduleCleanupExpiredPointsAndCoupons;
 
 app.use(cors());
 app.use(express.json());
+app.use("/avatar", express.static(path.join(__dirname, "../public/avatar")));
 
 // Routes
 app.use("/auth", authRoutes);
