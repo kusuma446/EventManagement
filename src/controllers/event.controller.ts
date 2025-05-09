@@ -5,7 +5,9 @@ import {
   getEventDetailService,
   getMyEventsService,
   updateEventService,
+  ShowEventsService,
 } from "../services/event.service";
+import * as eventService from "../services/event.service";
 
 export const createEvent = async (
   req: Request,
@@ -61,8 +63,6 @@ export const getMyEvents = async (
   }
 };
 
-import * as eventService from "../services/event.service";
-
 export const searchEvents = async (req: Request, res: Response) => {
   try {
     const query = req.query.q as string;
@@ -85,5 +85,17 @@ export const updateEvent = async (
     res.status(200).json({ message: "Event updated successfully", data });
   } catch (error) {
     next(error);
+  }
+};
+
+// Showing the event to the customer
+export const SHowEventsController = async (req: Request, res: Response) => {
+  try {
+    const events = await ShowEventsService(req);
+    res.status(200).json({ success: true, data: events });
+  } catch (error: any) {
+    const status = error.status || 500;
+    const message = error.message || "Internal server error";
+    res.status(status).json({ success: false, message });
   }
 };
