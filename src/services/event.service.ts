@@ -164,3 +164,48 @@ export const updateEventService = async (req: Request) => {
 
   return updated;
 };
+
+// SHow events
+export const ShowEventsService = async (req: Request) => {
+  const { category, featured } = req.query;
+
+  const filter: any = {};
+
+  if (category) {
+    filter.category = {
+      equals: String(category),
+      mode: "insensitive",
+    };
+  }
+
+  if (featured !== undefined) {
+    filter.Pay = featured === "true";
+  }
+
+  const events = await prisma.event.findMany({
+    where: filter,
+    orderBy: {
+      created_at: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      location: true,
+      start_date: true,
+      organizer: {
+        select: {
+          first_name: true,
+          last_name: true,
+        },
+      },
+      ticket_types: {
+        select: { price: true },
+        orderBy: { price: "asc" },
+        take: 1,
+      },
+    },
+  });
+
+  return events;
+};
