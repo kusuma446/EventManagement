@@ -237,3 +237,45 @@ export const ShowEventsService = async (req: Request) => {
 
   return events;
 };
+
+// EXplore
+export const getExploreEventsService = async (req: Request) => {
+  const { category, location } = req.query;
+
+  const filters: any = {};
+
+  if (category) {
+    filters.category = {
+      equals: String(category),
+      mode: "insensitive",
+    };
+  }
+
+  if (location) {
+    filters.location = {
+      contains: String(location),
+      mode: "insensitive",
+    };
+  }
+
+  return prisma.event.findMany({
+    where: filters,
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      ticket_types: {
+        select: { price: true },
+        orderBy: { price: "asc" },
+        take: 1,
+      },
+      organizer: {
+        select: {
+          first_name: true,
+          last_name: true,
+          profile_pict: true,
+        },
+      },
+    },
+  });
+};
