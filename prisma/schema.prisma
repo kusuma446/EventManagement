@@ -30,19 +30,20 @@ model User {
 }
 
 model Event {
-  id              String        @id @default(cuid())
+  id              String       @id @default(cuid())
   organizer_id    String
   name            String
+  image           String?
   description     String
   category        String
   location        String
   start_date      DateTime
   end_date        DateTime
   available_seats Int
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
   Pay             Boolean
-  organizer       User          @relation("OrganizerEvents", fields: [organizer_id], references: [id])
+  organizer       User         @relation("OrganizerEvents", fields: [organizer_id], references: [id])
   reviews         Review[]
   ticket_types    TicketType[]
   vouchers        Voucher[]
