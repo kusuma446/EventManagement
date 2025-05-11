@@ -111,7 +111,7 @@ export const findEventsByTitle = async (query: string) => {
     .map((word) => word.trim())
     .filter((word) => word.length > 0);
 
-  return prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
       OR: keywords.flatMap((word) => [
         {
@@ -129,7 +129,35 @@ export const findEventsByTitle = async (query: string) => {
       ]),
     },
     take: 10,
+    orderBy: {
+      start_date: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      start_date: true,
+      image: true, // URL Cloudinary
+      organizer: {
+        select: {
+          first_name: true,
+          last_name: true,
+          profile_pict: true, // relative path
+        },
+      },
+      ticket_types: {
+        select: {
+          price: true,
+        },
+        orderBy: {
+          price: "asc",
+        },
+        take: 1,
+      },
+    },
   });
+
+  return events;
 };
 
 export const updateEventService = async (req: Request) => {
