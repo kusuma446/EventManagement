@@ -6,6 +6,7 @@ import {
   getMyEventsService,
   updateEventService,
   ShowEventsService,
+  getExploreEventsService,
 } from "../services/event.service";
 import * as eventService from "../services/event.service";
 
@@ -97,5 +98,21 @@ export const SHowEventsController = async (req: Request, res: Response) => {
     const status = error.status || 500;
     const message = error.message || "Internal server error";
     res.status(status).json({ success: false, message });
+  }
+};
+
+// Explore event + filter
+export const exploreEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = await getExploreEventsService(req);
+    res
+      .status(200)
+      .json({ message: "Explore events retrieved successfully", data });
+  } catch (error) {
+    next(error);
   }
 };
