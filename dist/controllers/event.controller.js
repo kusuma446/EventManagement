@@ -42,8 +42,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateEvent = exports.searchEvents = exports.getMyEvents = exports.getEventDetail = exports.getAllEvents = exports.createEvent = void 0;
+exports.exploreEvents = exports.SHowEventsController = exports.updateEvent = exports.searchEvents = exports.getMyEvents = exports.getEventDetail = exports.getAllEvents = exports.createEvent = void 0;
 const event_service_1 = require("../services/event.service");
+const eventService = __importStar(require("../services/event.service"));
 const createEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield (0, event_service_1.createEventService)(req);
@@ -86,7 +87,6 @@ const getMyEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getMyEvents = getMyEvents;
-const eventService = __importStar(require("../services/event.service"));
 const searchEvents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const query = req.query.q;
@@ -109,3 +109,29 @@ const updateEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.updateEvent = updateEvent;
+// Showing the event to the customer
+const SHowEventsController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const events = yield (0, event_service_1.ShowEventsService)(req);
+        res.status(200).json({ success: true, data: events });
+    }
+    catch (error) {
+        const status = error.status || 500;
+        const message = error.message || "Internal server error";
+        res.status(status).json({ success: false, message });
+    }
+});
+exports.SHowEventsController = SHowEventsController;
+// Explore event + filter
+const exploreEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = yield (0, event_service_1.getExploreEventsService)(req);
+        res
+            .status(200)
+            .json({ message: "Explore events retrieved successfully", data });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.exploreEvents = exploreEvents;

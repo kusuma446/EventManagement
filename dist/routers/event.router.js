@@ -11,6 +11,8 @@ const validator_middleware_1 = __importDefault(require("../middlewares/validator
 const event_schema_1 = require("../schemas/event.schema");
 const router = express_1.default.Router();
 router.get("/", event_controller_1.searchEvents);
+router.get("/show", event_controller_1.SHowEventsController);
+router.get("/explore", event_controller_1.exploreEvents);
 router.get("/me", auth_middleware_1.isAuthenticated, auth_middleware_2.isOrganizer, event_controller_1.getMyEvents);
 router.get("/:id", event_controller_1.getEventDetail);
 router.post("/", auth_middleware_1.isAuthenticated, auth_middleware_2.isOrganizer, (0, validator_middleware_1.default)(event_schema_1.createEventSchema), event_controller_1.createEvent);

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateEventService = exports.findEventsByTitle = exports.getMyEventsService = exports.getEventDetailService = exports.getAllEventsService = exports.createEventService = void 0;
+exports.getExploreEventsService = exports.ShowEventsService = exports.updateEventService = exports.findEventsByTitle = exports.getMyEventsService = exports.getEventDetailService = exports.getAllEventsService = exports.createEventService = void 0;
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const createEventService = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
@@ -108,7 +108,7 @@ const findEventsByTitle = (query) => __awaiter(void 0, void 0, void 0, function*
         .split(" ")
         .map((word) => word.trim())
         .filter((word) => word.length > 0);
-    return prisma_1.default.event.findMany({
+    const events = yield prisma_1.default.event.findMany({
         where: {
             OR: keywords.flatMap((word) => [
                 {
@@ -126,7 +126,34 @@ const findEventsByTitle = (query) => __awaiter(void 0, void 0, void 0, function*
             ]),
         },
         take: 10,
+        orderBy: {
+            start_date: "asc",
+        },
+        select: {
+            id: true,
+            name: true,
+            category: true,
+            start_date: true,
+            image: true, // URL Cloudinary
+            organizer: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    profile_pict: true, // relative path
+                },
+            },
+            ticket_types: {
+                select: {
+                    price: true,
+                },
+                orderBy: {
+                    price: "asc",
+                },
+                take: 1,
+            },
+        },
     });
+    return events;
 });
 exports.findEventsByTitle = findEventsByTitle;
 const updateEventService = (req) => __awaiter(void 0, void 0, void 0, function* () {
@@ -158,3 +185,81 @@ const updateEventService = (req) => __awaiter(void 0, void 0, void 0, function* 
     return updated;
 });
 exports.updateEventService = updateEventService;
+// SHow events
+const ShowEventsService = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    const { category, featured } = req.query;
+    const filter = {};
+    if (category) {
+        filter.category = {
+            equals: String(category),
+            mode: "insensitive",
+        };
+    }
+    if (featured !== undefined) {
+        filter.Pay = featured === "true";
+    }
+    const events = yield prisma_1.default.event.findMany({
+        where: filter,
+        orderBy: {
+            created_at: "desc",
+        },
+        select: {
+            id: true,
+            name: true,
+            category: true,
+            location: true,
+            start_date: true,
+            organizer: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                },
+            },
+            ticket_types: {
+                select: { price: true },
+                orderBy: { price: "asc" },
+                take: 1,
+            },
+        },
+    });
+    return events;
+});
+exports.ShowEventsService = ShowEventsService;
+// EXplore
+const getExploreEventsService = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    const { category, location } = req.query;
+    const filters = {};
+    if (category) {
+        filters.category = {
+            equals: String(category),
+            mode: "insensitive",
+        };
+    }
+    if (location) {
+        filters.location = {
+            contains: String(location),
+            mode: "insensitive",
+        };
+    }
+    return prisma_1.default.event.findMany({
+        where: filters,
+        orderBy: {
+            created_at: "desc",
+        },
+        include: {
+            ticket_types: {
+                select: { price: true },
+                orderBy: { price: "asc" },
+                take: 1,
+            },
+            organizer: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    profile_pict: true,
+                },
+            },
+        },
+    });
+});
+exports.getExploreEventsService = getExploreEventsService;
