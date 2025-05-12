@@ -1,19 +1,18 @@
 {
-
-    "version": 2,
-    "build": [
-        {
-            "src": "dist/index.js",
-            "use": "@versel/node",
-            "config":{
-                "includeFiles": ["dist/**"]
-            }
-        }
-    ],
-    "router": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/index.js"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/index.js",
+      "use": "@versel/node",
+      "config": {
+        "includeFiles": ["dist/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/index.js"
+    }
+  ]
 }
