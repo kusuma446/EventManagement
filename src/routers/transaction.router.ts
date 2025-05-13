@@ -6,6 +6,7 @@ import {
 } from "../middlewares/auth.middleware";
 import {
   createTransaction,
+  getTransactionDetail,
   uploadPaymentProof,
   getOrganizerTransactions,
   approveTransaction,
@@ -25,6 +26,9 @@ router.post(
   ReqValidator(createTransactionSchema),
   createTransaction
 );
+
+router.get("/:id", isAuthenticated, getTransactionDetail);
+
 router.put(
   "/:id/upload-proof",
   isAuthenticated,

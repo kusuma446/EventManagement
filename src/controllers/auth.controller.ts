@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { registerService, loginService } from "../services/auth.service";
-import { updateProfileService } from "../services/auth.service";
-import { changePasswordService } from "../services/auth.service";
-import { forgotPasswordService } from "../services/auth.service";
-import { resetPasswordService } from "../services/auth.service";
-import { getAuthenticatedUserService } from "../services/auth.service";
+import {
+  registerService,
+  loginService,
+  updateProfileService,
+  changePasswordService,
+  forgotPasswordService,
+  resetPasswordService,
+  getAuthenticatedUserService,
+} from "../services/auth.service";
 
 export const register = async (
   req: Request,
@@ -25,8 +28,17 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const data = await loginService(req.body);
-    res.status(201).json({ message: "Login success", data });
+    const { user, token } = await loginService(req.body);
+
+    // Set JWT token in HTTP-only cookie
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    res.status(200).json({ message: "Login success", user });
   } catch (error) {
     next(error);
   }
