@@ -3,16 +3,12 @@ import { Request } from "express";
 
 export const createEventService = async (req: Request) => {
   const user = req.user!;
-  const {
-    name,
-    description,
-    category,
-    location,
-    Pay,
-    start_date,
-    end_date,
-    available_seats,
-  } = req.body;
+  const { name, description, category, location, start_date, end_date } =
+    req.body;
+
+  const Pay = req.body.Pay === "true";
+  const available_seats = parseInt(req.body.available_seats, 10);
+  const file = req.file;
 
   // Cek hanya ORGANIZER yang boleh buat event
   if (user.role !== "ORGANIZER") {
@@ -24,6 +20,12 @@ export const createEventService = async (req: Request) => {
     throw { status: 400, message: "Start date must be before end date" };
   }
 
+  if (isNaN(available_seats) || available_seats < 1) {
+    throw { status: 400, message: "Available seats must be a positive number" };
+  }
+
+  const imagePath = file ? `/image/${file.filename}` : null;
+
   const newEvent = await prisma.event.create({
     data: {
       name,
@@ -34,6 +36,7 @@ export const createEventService = async (req: Request) => {
       start_date: new Date(start_date),
       end_date: new Date(end_date),
       available_seats,
+      image: imagePath,
       organizer_id: user.id, // Relasi ke events pada user
     },
   });
@@ -90,6 +93,7 @@ export const getMyEventsService = async (req: Request) => {
     select: {
       id: true,
       name: true,
+      image: true,
       category: true,
       location: true,
       available_seats: true,
@@ -163,6 +167,8 @@ export const updateEventService = async (req: Request) => {
   const { id } = req.params;
   const { name, start_date, end_date, location } = req.body;
   const user_id = req.user?.id;
+  const file = req.file;
+  const image = file ? `/image/${file.filename}` : null;
 
   if (!user_id) {
     throw { status: 401, message: "Unauthorized" };
@@ -186,6 +192,7 @@ export const updateEventService = async (req: Request) => {
       start_date,
       end_date,
       location,
+      ...(image && { image }),
     },
   });
 
