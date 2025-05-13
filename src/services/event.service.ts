@@ -101,7 +101,6 @@ export const getMyEventsService = async (req: Request) => {
     },
   });
 
-  console.log("📝 Events found:", events.length);
   return events;
 };
 

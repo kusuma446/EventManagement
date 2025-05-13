@@ -46,15 +46,24 @@ export const createReviewService = async (req: Request) => {
   return review;
 };
 
-export const getReviewsByEventService = async (eventId: string) => {
+export const getReviewsByEventService = async (req: Request) => {
   // Ambil semua review berdasarkan event ID
-  return prisma.review.findMany({
-    where: { event_id: eventId },
+  const { event_id } = req.params;
+
+  const reviews = await prisma.review.findMany({
+    where: { event_id },
     include: {
-      // Sertakan nama user yang memberi review (tanpa seluruh data user)
       user: {
-        select: { first_name: true, last_name: true },
+        select: {
+          first_name: true,
+          last_name: true,
+        },
       },
     },
+    orderBy: {
+      created_at: "desc",
+    },
   });
+
+  return reviews;
 };

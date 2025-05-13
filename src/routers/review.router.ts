@@ -16,6 +16,6 @@ router.post(
   ReqValidator(createReviewSchema),
   createReview
 );
-router.get("/event/:eventId", getReviewsByEvent);
+router.get("/event/:event_id", getReviewsByEvent);
 
 export default router;

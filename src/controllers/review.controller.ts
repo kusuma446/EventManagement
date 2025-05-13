@@ -23,7 +23,7 @@ export const getReviewsByEvent = async (
   next: NextFunction
 ) => {
   try {
-    const data = await getReviewsByEventService(req.params.eventId);
+    const data = await getReviewsByEventService(req);
     res.status(200).json({ reviews: data });
   } catch (error) {
     next(error);
