@@ -7,6 +7,9 @@ import { sendEmail } from "../utils/nodemailer";
 export const createTransactionService = async (req: Request) => {
   const user = req.user!;
   // Transaksi hanya CUSTOMER
+  console.log("BODY YANG DITERIMA:", req.body);
+  console.log("USER YANG LOGIN:", req.user);
+
   if (user.role !== "CUSTOMER") {
     throw { status: 403, message: "Only customers can make transactions" };
   }
@@ -99,6 +102,30 @@ export const createTransactionService = async (req: Request) => {
   }
 
   return transaction;
+};
+
+export const getTransactionDetailService = async (id: string) => {
+  const trx = await prisma.transaction.findUnique({
+    where: { id },
+    include: {
+      ticket_type: {
+        include: {
+          event: {
+            select: {
+              name: true,
+              image: true,
+              location: true,
+              start_date: true,
+              end_date: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!trx) throw { status: 404, message: "Transaction not found" };
+  return trx;
 };
 
 export const uploadPaymentProofService = async (req: Request) => {

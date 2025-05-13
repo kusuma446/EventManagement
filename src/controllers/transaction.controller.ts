@@ -6,6 +6,7 @@ import {
   approveTransactionService,
   rejectTransactionService,
   autoCancelExpiredTransactionsService,
+  getTransactionDetailService,
 } from "../services/transaction.service";
 
 export const createTransaction = async (
@@ -16,6 +17,21 @@ export const createTransaction = async (
   try {
     const data = await createTransactionService(req);
     res.status(201).json({ message: "Transaction created", data });
+  } catch (error) {
+    const err = error as any;
+    res.status(400).send(err.message);
+    // next(error);
+  }
+};
+
+export const getTransactionDetail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = await getTransactionDetailService(req.params.id);
+    res.status(200).json({ transaction: data });
   } catch (error) {
     next(error);
   }
