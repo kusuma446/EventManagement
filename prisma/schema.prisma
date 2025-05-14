@@ -69,6 +69,7 @@ model Transaction {
   coupon_id      String?
   created_at     DateTime          @default(now())
   status         TransactionStatus
+  payment_proof  String?
   coupon         Coupon?           @relation(fields: [coupon_id], references: [id])
   ticket_type    TicketType?       @relation(fields: [ticket_type_id], references: [id])
   user           User              @relation(fields: [user_id], references: [id])
