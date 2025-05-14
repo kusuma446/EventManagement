@@ -1,6 +1,7 @@
 import prisma from "../../lib/prisma";
 import cron from "node-cron";
 import { TransactionStatus } from "@prisma/client";
+import { sendEmail } from "../nodemailer";
 
 export const scheduleAutoExpireTransactions = () => {
   cron.schedule("*/10 * * * *", async () => {
@@ -78,6 +79,29 @@ export const scheduleAutoExpireTransactions = () => {
         });
 
         console.log(`[CRON] Transaksi ${trx.id} → EXPIRED.`);
+
+        // Kirim email pemberitahuan kepada pengguna
+        const to = trx.user.email;
+        const subject = "Your Transaction Has Expired";
+        const html = `
+          <h3>Transaction Expired</h3>
+          <p>Hi ${trx.user.first_name},</p>
+          <p>Your transaction for the event <strong>${trx.ticket_type?.event.name}</strong> has expired because it was not paid within 2 hours.</p>
+          <p>Please feel free to create a new transaction if you're still interested in the event.</p>
+          <p>Thank you.</p>
+        `;
+
+        try {
+          await sendEmail(to, subject, html);
+          console.log(
+            `[CRON] Email sent to ${trx.user.email} about expired transaction.`
+          );
+        } catch (emailError) {
+          console.error(
+            `[CRON] Failed to send email to ${trx.user.email}:`,
+            emailError
+          );
+        }
       }
 
       console.log(`[CRON] Auto-expire selesai. Total: ${transactions.length}`);

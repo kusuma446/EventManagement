@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import prisma from "../../lib/prisma";
 import { TransactionStatus } from "@prisma/client";
+import { sendEmail } from "../nodemailer";
 
 export const scheduleAutoCancelUnconfirmedTransactions = () => {
   // Jalan setiap jam 1 pagi
@@ -74,6 +75,24 @@ export const scheduleAutoCancelUnconfirmedTransactions = () => {
             });
           }
         });
+
+        // Kirim email notifikasi
+        const to = trx.user.email;
+        const subject = "Your Transaction Has Been Cancelled";
+        const html = `
+          <h3>Transaction Cancelled</h3>
+          <p>Hi ${trx.user.first_name},</p>
+          <p>Your transaction for the event <strong>${trx.ticket_type?.event.name}</strong> has been automatically cancelled because it was not confirmed within 3 days.</p>
+          <p>If you're still interested, please create a new transaction.</p>
+          <p>Thank you.</p>
+        `;
+
+        try {
+          await sendEmail(to, subject, html);
+          console.log(`[EMAIL] Notifikasi pembatalan terkirim ke ${to}`);
+        } catch (emailErr) {
+          console.error(`[EMAIL] Gagal mengirim email ke ${to}:`, emailErr);
+        }
 
         console.log(
           `[CRON] Transaksi ${trx.id} → CANCELED (tidak dikonfirmasi dalam 3 hari).`
