@@ -28,17 +28,17 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const { user, token } = await loginService(req.body);
+    const data = await loginService(req.body);
 
     // Set JWT token in HTTP-only cookie
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+    // res.cookie("access_token", token, {
+    //   httpOnly: true,
+    //   sameSite: "lax",
+    //   secure: process.env.NODE_ENV === "production",
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day
+    // });
 
-    res.status(200).json({ message: "Login success", user });
+    res.status(200).json({ message: "Login success", data });
   } catch (error) {
     next(error);
   }

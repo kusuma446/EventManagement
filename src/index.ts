@@ -24,15 +24,10 @@ dotenv.config();
 
 scheduleAutoExpireTransactions();
 scheduleAutoCancelUnconfirmedTransactions();
-scheduleCleanupExpiredPointsAndCoupons;
+scheduleCleanupExpiredPointsAndCoupons();
 
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    // credentials: true,
-  })
-);
+//app.use(cookieParser());
+app.use(cors());
 app.use(express.json());
 app.use("/avatar", express.static(path.join(__dirname, "../public/avatar")));
 app.use("/image", express.static(path.join(__dirname, "../public/image")));
