@@ -37,10 +37,18 @@ export const getTicketTypesService = async (req: Request) => {
   const { event_id } = req.query;
 
   if (!event_id || typeof event_id !== "string") {
-    throw { status: 400, message: "event_id is required" };
+    throw { status: 400, message: "event_id is required as a string query" };
   }
 
-  return prisma.ticketType.findMany({
+  const ticketTypes = await prisma.ticketType.findMany({
     where: { event_id },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      quota: true,
+    },
   });
+
+  return ticketTypes;
 };
