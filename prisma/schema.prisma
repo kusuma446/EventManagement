@@ -70,21 +70,25 @@ model Transaction {
   created_at     DateTime          @default(now())
   status         TransactionStatus
   payment_proof  String?
-  coupon         Coupon?           @relation(fields: [coupon_id], references: [id])
-  ticket_type    TicketType?       @relation(fields: [ticket_type_id], references: [id])
-  user           User              @relation(fields: [user_id], references: [id])
-  voucher        Voucher?          @relation(fields: [voucher_id], references: [id])
+
+  coupon      Coupon?     @relation(fields: [coupon_id], references: [id])
+  ticket_type TicketType? @relation(fields: [ticket_type_id], references: [id])
+  user        User        @relation(fields: [user_id], references: [id])
+  voucher     Voucher?    @relation(fields: [voucher_id], references: [id])
+  review      Review?     @relation("ReviewToTransaction")
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  user_id    String
-  event_id   String
-  rating     Int
-  comment    String
-  created_at DateTime @default(now())
-  event      Event    @relation(fields: [event_id], references: [id])
-  user       User     @relation(fields: [user_id], references: [id])
+  id             String       @id @default(cuid())
+  user_id        String
+  event_id       String
+  transaction_id String?      @unique
+  rating         Int
+  comment        String
+  created_at     DateTime     @default(now())
+  event          Event        @relation(fields: [event_id], references: [id])
+  user           User         @relation(fields: [user_id], references: [id])
+  transaction    Transaction? @relation("ReviewToTransaction", fields: [transaction_id], references: [id])
 }
 
 model Voucher {

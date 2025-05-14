@@ -7,6 +7,7 @@ import {
   rejectTransactionService,
   autoCancelExpiredTransactionsService,
   getTransactionDetailService,
+  getMyTicketsService,
 } from "../services/transaction.service";
 
 export const createTransaction = async (
@@ -46,6 +47,24 @@ export const uploadPaymentProof = async (
     const data = await uploadPaymentProofService(req);
     res.status(200).json({ message: "Proof uploaded", data });
   } catch (error) {
+    next(error);
+  }
+};
+
+// my-ticket
+
+export const getMyTickets = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("🔥 HIT /transactions/my");
+    console.log("👤 User:", req.user);
+    const transactions = await getMyTicketsService(req);
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error("❌ Error fetching my tickets:", error);
     next(error);
   }
 };

@@ -3,22 +3,21 @@ import { Request } from "express";
 
 export const createReviewService = async (req: Request) => {
   const user = req.user!;
+  const { event_id, rating, comment } = req.body;
 
-  // Hanya customer yang bisa buat review
   if (user.role !== "CUSTOMER") {
     throw { status: 403, message: "Only customers can submit reviews" };
   }
 
-  const { event_id, rating, comment } = req.body;
-
-  // Ambil semua ticketType.id yang terkait dengan event tersebut
+  // Ambil semua ticketType yang terkait dengan event
   const tickets = await prisma.ticketType.findMany({
     where: { event_id },
     select: { id: true },
   });
+
   const ticketIds = tickets.map((t) => t.id);
 
-  // Cek apakah user punya transaksi dengan status DONE terhadap salah satu ticket type dari event itu
+  // Cari transaksi DONE milik user untuk event ini
   const trx = await prisma.transaction.findFirst({
     where: {
       user_id: user.id,
@@ -34,12 +33,23 @@ export const createReviewService = async (req: Request) => {
     };
   }
 
+  // Cek apakah sudah pernah review transaksi ini
+  const existing = await prisma.review.findFirst({
+    where: { transaction_id: trx.id },
+  });
+
+  if (existing) {
+    throw { status: 400, message: "You have already submitted a review" };
+  }
+
+  // Buat review baru
   const review = await prisma.review.create({
     data: {
       user_id: user.id,
       event_id,
       rating,
       comment,
+      transaction_id: trx.id, // penting!
     },
   });
 

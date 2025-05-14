@@ -11,6 +11,7 @@ import {
   getOrganizerTransactions,
   approveTransaction,
   rejectTransaction,
+  getMyTickets,
 } from "../controllers/transaction.controller";
 import multer from "multer";
 import ReqValidator from "../middlewares/validator.middleware";
@@ -19,6 +20,7 @@ import { createTransactionSchema } from "../schemas/transaction.schema";
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
+router.get("/my", isAuthenticated, getMyTickets);
 router.get(
   "/organizer",
   isAuthenticated,

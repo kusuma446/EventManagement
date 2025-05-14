@@ -155,6 +155,46 @@ export const uploadPaymentProofService = async (req: Request) => {
   return updated;
 };
 
+// my-ticket
+export const getMyTicketsService = async (req: Request) => {
+  const user = req.user;
+  if (!user) throw { status: 401, message: "Unauthorized" };
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      user_id: user.id,
+      status: {
+        in: ["WAITING_PAYMENT", "WAITING_CONFIRMATION", "DONE"],
+      },
+    },
+    include: {
+      ticket_type: {
+        include: {
+          event: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              location: true,
+              end_date: true,
+            },
+          },
+        },
+      },
+      review: {
+        select: {
+          id: true,
+        },
+      },
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+
+  return transactions;
+};
+
 export const getOrganizerTransactionsService = async (req: Request) => {
   const user = req.user!;
 

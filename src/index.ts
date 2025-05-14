@@ -15,8 +15,6 @@ import voucherRoutes from "./routers/voucher.router";
 import { scheduleAutoExpireTransactions } from "./utils/cron/autoExpireTransactions";
 import { scheduleAutoCancelUnconfirmedTransactions } from "./utils/cron/autoCancelUnconfirmedTransactions";
 import { scheduleCleanupExpiredPointsAndCoupons } from "./utils/cron/cleanupExpiredPointsAndCoupons";
-import { corsOptions } from "./utils/cors/corsOptions";
-import cookieParser from "cookie-parser";
 
 const port = PORT || 5050;
 const app: Application = express();
