@@ -166,15 +166,24 @@ export const getOrganizerTransactionsService = async (req: Request) => {
         },
       },
     },
-    include: {
+    select: {
+      id: true,
+      total_price: true,
+      status: true,
+      payment_proof: true,
       user: {
-        select: { first_name: true, last_name: true },
+        select: {
+          first_name: true,
+          last_name: true,
+        },
       },
       ticket_type: {
         select: {
           name: true,
           event: {
-            select: { name: true },
+            select: {
+              name: true,
+            },
           },
         },
       },
