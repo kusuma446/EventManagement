@@ -6,30 +6,30 @@ import { sendEmail } from "../utils/nodemailer";
 
 export const createTransactionService = async (req: Request) => {
   const user = req.user!;
-  // Transaksi hanya CUSTOMER
-  console.log("BODY YANG DITERIMA:", req.body);
-  console.log("USER YANG LOGIN:", req.user);
+  const { ticket_type_id, voucher_id, coupon_id, used_points } = req.body;
+
+  console.log("📦 Body diterima:", req.body);
+  console.log("👤 User login:", user);
 
   if (user.role !== "CUSTOMER") {
     throw { status: 403, message: "Only customers can make transactions" };
   }
-  const { ticket_type_id, voucher_id, coupon_id, used_points } = req.body;
 
-  if (!ticket_type_id)
+  if (!ticket_type_id) {
     throw { status: 400, message: "ticket_type_id is required" };
+  }
 
   const ticket = await prisma.ticketType.findUnique({
     where: { id: ticket_type_id },
   });
 
-  // Cek ketersediaan tiket
-  if (!ticket || ticket.quota <= 0)
+  if (!ticket || ticket.quota <= 0) {
     throw { status: 400, message: "Ticket not available" };
+  }
 
+  // --- Voucher ---
   let voucherDiscount = 0;
-  // Mengecek apakah request body menyertakan voucher_id
   if (voucher_id) {
-    // Mencari voucher di database berdasarkan ID
     const voucher = await prisma.voucher.findUnique({
       where: { id: voucher_id },
     });
@@ -43,30 +43,33 @@ export const createTransactionService = async (req: Request) => {
     voucherDiscount = voucher.discount;
   }
 
+  // --- Coupon ---
   let couponDiscount = 0;
-  // Validasi coupon jika ada
   if (coupon_id) {
     const coupon = await prisma.coupon.findUnique({ where: { id: coupon_id } });
-    if (!coupon || coupon.used)
+    if (!coupon || coupon.used) {
       throw { status: 404, message: "Coupon not found or already used" };
+    }
+
     couponDiscount = coupon.discount;
   }
 
   const pointsUsed = used_points || 0;
 
-  // Cek apakah user sudah pernah beli tiket ini
+  // --- Cek transaksi ganda ---
   const existing = await prisma.transaction.findFirst({
     where: { user_id: user.id, ticket_type_id },
   });
-  if (existing)
+  if (existing) {
     throw { status: 400, message: "You already purchased this ticket" };
+  }
 
-  // Hitung total price
+  // --- Hitung total ---
   let total_price =
     ticket.price - voucherDiscount - couponDiscount - pointsUsed;
-  if (total_price < 0) total_price = 0; // Tidak boleh minus
+  if (total_price < 0) total_price = 0;
 
-  // Buat transaksi
+  // --- Buat transaksi ---
   const transaction = await prisma.transaction.create({
     data: {
       user_id: user.id,
@@ -79,13 +82,13 @@ export const createTransactionService = async (req: Request) => {
     },
   });
 
-  // Kurangi kuota tiket
+  // --- Kurangi kuota ---
   await prisma.ticketType.update({
     where: { id: ticket_type_id },
     data: { quota: { decrement: 1 } },
   });
 
-  // Tandai kupon kalau digunakan
+  // --- Tandai kupon digunakan ---
   if (coupon_id) {
     await prisma.coupon.update({
       where: { id: coupon_id },
@@ -93,11 +96,11 @@ export const createTransactionService = async (req: Request) => {
     });
   }
 
-  // Kurangi point jika digunakan
-  if (used_points) {
+  // --- Kurangi poin user ---
+  if (pointsUsed > 0) {
     await prisma.user.update({
       where: { id: user.id },
-      data: { point: { decrement: used_points } },
+      data: { point: { decrement: pointsUsed } },
     });
   }
 
@@ -129,9 +132,27 @@ export const getTransactionDetailService = async (id: string) => {
 };
 
 export const uploadPaymentProofService = async (req: Request) => {
+  const { id } = req.params;
+  const user = req.user!;
+
   if (!req.file) throw { status: 400, message: "File is required" };
-  const filePath = path.join("uploads", req.file.filename);
-  return { path: filePath };
+  const filePath = `/uploads/${req.file.filename}`;
+
+  // Validasi transaksi
+  const trx = await prisma.transaction.findUnique({ where: { id } });
+  if (!trx) throw { status: 404, message: "Transaction not found" };
+  if (trx.user_id !== user.id) throw { status: 403, message: "Unauthorized" };
+
+  // Update bukti dan status transaksi
+  const updated = await prisma.transaction.update({
+    where: { id },
+    data: {
+      payment_proof: filePath,
+      status: TransactionStatus.WAITING_CONFIRMATION,
+    },
+  });
+
+  return updated;
 };
 
 export const getOrganizerTransactionsService = async (req: Request) => {
