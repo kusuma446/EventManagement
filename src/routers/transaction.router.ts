@@ -19,6 +19,13 @@ import { createTransactionSchema } from "../schemas/transaction.schema";
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
+router.get(
+  "/organizer",
+  isAuthenticated,
+  isOrganizer,
+  getOrganizerTransactions
+);
+
 router.post(
   "/",
   isAuthenticated,
@@ -35,13 +42,6 @@ router.put(
   upload.single("file"),
   isCustomer,
   uploadPaymentProof
-);
-
-router.get(
-  "/organizer",
-  isAuthenticated,
-  isOrganizer,
-  getOrganizerTransactions
 );
 
 router.put("/:id/approve", isAuthenticated, isOrganizer, approveTransaction);
